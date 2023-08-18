@@ -1,4 +1,14 @@
+import json
+import logging
+import pickle
 import socket
+
+from config import UDP_PORT, UDP_HOST
+
+logging.basicConfig(level=logging.DEBUG)
+
+JSON_PATH = "storage/data.json"
+
 
 def run_server(ip, port):
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -7,18 +17,30 @@ def run_server(ip, port):
     try:
         while True:
             data, address = sock.recvfrom(1024)
-            print(f'Received data: {data.decode()} from: {address}')
-            sock.sendto(data, address)
-            print(f'Send data: {data.decode()} to: {address}')
+
+            incoming_dict = pickle.loads(data)
+
+            logging.debug(f'Received data: {pickle.loads(data)} from: {address}')
+
+            with open(JSON_PATH, "r") as fdr:
+                try:
+                    data_dict: dict = json.load(fdr)
+                except json.JSONDecodeError:
+                    data_dict = {}
+
+            data_dict.update(incoming_dict)
+
+            with open(JSON_PATH, "w") as fdw:
+                json.dump(data_dict, fdw)
+
+            # sock.sendto(data, address)
+            # logging.debug(f'Send data: {data.decode()} to: {address}')
 
     except KeyboardInterrupt:
-        print(f'Destroy server')
+        logging.info(f'Destroy server')
     finally:
         sock.close()
 
 
 if __name__ == '__main__':
-    UDP_IP = '127.0.0.1'
-    UDP_PORT = 5000
-
-    run_server(UDP_IP, UDP_PORT)
+    run_server(UDP_HOST, UDP_PORT)

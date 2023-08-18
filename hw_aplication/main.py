@@ -1,7 +1,13 @@
-from http.server import HTTPServer, BaseHTTPRequestHandler
-import urllib.parse
+import logging
 import mimetypes
 import pathlib
+import urllib.parse
+from datetime import datetime
+from http.server import HTTPServer, BaseHTTPRequestHandler
+
+from client_socket_udp import send_data_by_udp
+
+logging.basicConfig(level=logging.INFO)
 
 
 class HttpHandler(BaseHTTPRequestHandler):
@@ -19,15 +25,20 @@ class HttpHandler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         data = self.rfile.read(int(self.headers['Content-Length']))
-        # print(data)
+
         data_parse = urllib.parse.unquote_plus(data.decode())
-        # print(data_parse)
         data_dict = {key: value for key, value in [el.split('=') for el in data_parse.split('&')]}
-        print(data_dict)
+
+        logging.debug(data_dict)
+
+        result_dict = {str(datetime.now()): data_dict}
+        logging.debug(result_dict)
+
+        send_data_by_udp(result_dict)
+
         self.send_response(302)
         self.send_header('Location', '/')
         self.end_headers()
-
 
     def send_html_file(self, filename, status=200):
         self.send_response(status)
