@@ -10,9 +10,9 @@ logging.basicConfig(level=logging.DEBUG)
 JSON_PATH = "storage/data.json"
 
 
-def run_server(ip, port):
+def run_udp_server():
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    server = ip, port
+    server = UDP_HOST, UDP_PORT
     sock.bind(server)
     try:
         while True:
@@ -43,4 +43,4 @@ def run_server(ip, port):
 
 
 if __name__ == '__main__':
-    run_server(UDP_HOST, UDP_PORT)
+    run_udp_server()
